@@ -1,0 +1,29 @@
+{
+  "name": "browser-automation-puppeteer",
+  "version": "1.0.0",
+  "description": "Browser Automation using Puppeteer & NodeJS",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AayushRajthala99/browser-automation-puppeteer.git"
+  },
+  "keywords": [
+    "Node.js",
+    "puppeteer"
+  ],
+  "author": "Aayush Rajthala",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AayushRajthala99/browser-automation-puppeteer/issues"
+  },
+  "homepage": "https://github.com/AayushRajthala99/browser-automation-puppeteer#readme",
+  "dependencies": {
+    "puppeteer": "^19.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}

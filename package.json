@@ -21,9 +21,11 @@
   },
   "homepage": "https://github.com/AayushRajthala99/browser-automation-puppeteer#readme",
   "dependencies": {
+    "fs": "^0.0.1-security",
     "puppeteer": "^19.3.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.19"
-  }
+  },
+    "type": "module"
 }

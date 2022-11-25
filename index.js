@@ -2,19 +2,23 @@ import puppeteer from 'puppeteer';
 import {
     promises as fsPromises
 } from 'fs';
+import {
+    lookup
+} from 'dns-lookup-cache';
 
 (async () => {
     try {
         //Browser Initialization...
         const browser = await puppeteer.launch({
-            headless: false
+            headless: true
         });
 
         //Reading URLs from .txt file...
         let urlList = await fsPromises.readFile('urls.txt', 'utf-8');
 
-        //Transforming String into Array...
-        urlList = urlList.split(/\r?\n/);
+        //Filtering Invalid URLs...
+        urlList = filterUrl(urlList);
+        // console.log("Query URLs === ", urlList);
 
         async function screenshotPage(url) {
             //Page Initialization...
@@ -26,14 +30,18 @@ import {
 
             return new Promise(async function (resolve, reject) {
                 //Page Navigation...
-                await page.goto('https://' + url, {
-                    timeout: 60000,
+                if (!(url.includes('https://'))) {
+                    url = 'https://' + url;
+                }
+
+                await page.goto(url, {
+                    timeout: 30000,
                     waitUntil: 'load'
                 });
 
-                //Screenshot Save Filename Generation...
+                //Screenshot Filename Generation...
                 let date = new Date();
-                let fileString = (url.length <= 5) ? url.slice(0, 2) : url.slice(0, 6);
+                let fileString = (url.length <= 13) ? url.slice(8, 10) : url.slice(8, 14);
                 date = date.toISOString().slice(0, 20);
                 date = date.replaceAll('-', '');
                 date = date.replaceAll(':', '');
@@ -80,3 +88,36 @@ import {
         console.log("Error: ", error);
     }
 })();
+
+function filterUrl(urls) {
+    //Transforming String into Array...
+    let urlList = urls.split(/\r?\n/);
+    const newUrlList = [];
+    let validUrl = null;
+
+    urlList.forEach(url => {
+        validUrl = dnslooker(url);
+        validUrl.then(url => {
+            console.log("ValidURL", url);
+            newUrlList.push(url);
+        })
+    })
+    console.log("Filtered URLs", newUrlList);
+    return urlList;
+}
+
+async function dnslooker(url) {
+    return new Promise(function (resolve, reject) {
+        lookup(url, {
+            all: false,
+            family: 4
+        }, (error, address) => {
+            if (error === null && address !== undefined) {
+                resolve(url);
+            }
+        });
+    }).then((result) => {
+        console.log("RESULT===", result);
+        return result;
+    })
+}

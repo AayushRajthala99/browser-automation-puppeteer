@@ -6,6 +6,9 @@ import {
     lookup
 } from 'dns-lookup-cache';
 
+//URL REGEX...
+const urlRegex = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+
 (async () => {
     try {
         //Browser Initialization...
@@ -17,63 +20,12 @@ import {
         let urlList = await fsPromises.readFile('urls.txt', 'utf-8');
 
         //Filtering Invalid URLs...
-        urlList = filterUrl(urlList);
+        urlList = await filterUrl(urlList);
         // console.log("Query URLs === ", urlList);
 
-        async function screenshotPage(url) {
-            //Page Initialization...
-            const page = await browser.newPage();
-            await page.setViewport({
-                width: 1920,
-                height: 1080
-            });
-
-            return new Promise(async function (resolve, reject) {
-                //Page Navigation...
-                if (!(url.includes('https://'))) {
-                    url = 'https://' + url;
-                }
-
-                await page.goto(url, {
-                    timeout: 30000,
-                    waitUntil: 'load'
-                });
-
-                //Screenshot Filename Generation...
-                let date = new Date();
-                let fileString = (url.length <= 13) ? url.slice(8, 10) : url.slice(8, 14);
-                date = date.toISOString().slice(0, 20);
-                date = date.replaceAll('-', '');
-                date = date.replaceAll(':', '');
-
-                //Page Screenshot Operation...                
-                let filePath = './screenshots/' + fileString + '-' + date + '.png';
-                await page.screenshot({
-                    path: filePath,
-                    fullPage: true
-                });
-
-                // Page Terminated...
-                await page.close();
-
-                resolve({
-                    url: url,
-                    status: 'Success',
-                    error: null
-                });
-            }).catch((error) => {
-                return {
-                    url: url,
-                    status: 'Failed',
-                    error: error
-                }
-            })
-        }
-
         let promises = [];
-
-        urlList.forEach(url => {
-            promises.push(screenshotPage(url));
+        urlList.forEach(async url => {
+            promises.push(screenshotPage(browser, url));
         })
 
         await Promise.all(promises)
@@ -89,35 +41,86 @@ import {
     }
 })();
 
-function filterUrl(urls) {
+async function filterUrl(urls) {
     //Transforming String into Array...
     let urlList = urls.split(/\r?\n/);
     const newUrlList = [];
-    let validUrl = null;
 
-    urlList.forEach(url => {
-        validUrl = dnslooker(url);
-        validUrl.then(url => {
+    urlList.forEach(async url => {
+        await dnslooker(url).then(url => {
             console.log("ValidURL", url);
             newUrlList.push(url);
+            console.log(newUrlList);
         })
     })
     console.log("Filtered URLs", newUrlList);
     return urlList;
 }
 
-async function dnslooker(url) {
+function dnslooker(url) {
     return new Promise(function (resolve, reject) {
         lookup(url, {
             all: false,
             family: 4
         }, (error, address) => {
             if (error === null && address !== undefined) {
+                console.log("RESULT===", url);
                 resolve(url);
             }
         });
-    }).then((result) => {
-        console.log("RESULT===", result);
-        return result;
+    })
+    // .then((result) => {
+    //     console.log("RESULT===", result);
+    //     return result;
+    // })
+}
+
+async function screenshotPage(browser, url) {
+    //Page Initialization...
+    const page = await browser.newPage();
+    await page.setViewport({
+        width: 1920,
+        height: 1080
+    });
+
+    return new Promise(async function (resolve, reject) {
+        //Page Navigation...
+        if (!(url.includes('https://'))) {
+            url = 'https://' + url;
+        }
+
+        await page.goto(url, {
+            timeout: 30000,
+            waitUntil: 'load'
+        });
+
+        //Screenshot Filename Generation...
+        let date = new Date();
+        let fileString = (url.length <= 13) ? url.slice(8, 10) : url.slice(8, 14);
+        date = date.toISOString().slice(0, 20);
+        date = date.replaceAll('-', '');
+        date = date.replaceAll(':', '');
+
+        //Page Screenshot Operation...                
+        let filePath = './screenshots/' + fileString + '-' + date + '.png';
+        await page.screenshot({
+            path: filePath,
+            fullPage: true
+        });
+
+        // Page Terminated...
+        await page.close();
+
+        resolve({
+            url: url,
+            status: 'Success',
+            error: null
+        });
+    }).catch((error) => {
+        return {
+            url: url,
+            status: 'Failed',
+            error: error
+        }
     })
 }

@@ -44,16 +44,17 @@ const urlRegex = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-
 async function filterUrl(urls) {
     //Transforming String into Array...
     let urlList = urls.split(/\r?\n/);
-    const newUrlList = [];
+    let newUrlList = [];
+
+    // for (let i = 0; i < urlList.length; i++) {
+    //     urlList[i] = urlFormatter(urlList[i]);
+    // }
 
     urlList.forEach(async url => {
         await Promise.all([await dnslooker(url)])
             .then((result) => {
-                // console.log("ValidURL", result[0]);
-                newUrlList.push(result[0]);
-                // console.log(newUrlList);
+                newUrlList = newUrlList.concat(result);
             })
-
     })
     console.log("Filtered URLs", newUrlList);
     return urlList;

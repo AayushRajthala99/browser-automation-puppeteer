@@ -47,17 +47,20 @@ async function filterUrl(urls) {
     const newUrlList = [];
 
     urlList.forEach(async url => {
-        await dnslooker(url).then(url => {
-            console.log("ValidURL", url);
-            newUrlList.push(url);
-            console.log(newUrlList);
-        })
+        await Promise.all([await dnslooker(url)])
+            .then((result) => {
+                console.log(result[0]);
+                console.log("ValidURL", result[0]);
+                newUrlList.push(result[0]);
+                console.log(newUrlList);
+            })
+
     })
     console.log("Filtered URLs", newUrlList);
     return urlList;
 }
 
-function dnslooker(url) {
+async function dnslooker(url) {
     return new Promise(function (resolve, reject) {
         lookup(url, {
             all: false,
@@ -69,10 +72,6 @@ function dnslooker(url) {
             }
         });
     })
-    // .then((result) => {
-    //     console.log("RESULT===", result);
-    //     return result;
-    // })
 }
 
 async function screenshotPage(browser, url) {
@@ -84,11 +83,10 @@ async function screenshotPage(browser, url) {
     });
 
     return new Promise(async function (resolve, reject) {
-        //Page Navigation...
-        if (!(url.includes('https://'))) {
-            url = 'https://' + url;
-        }
+        //Formatting URL...
+        url = urlFormatter(url);
 
+        //Page Navigation...
         await page.goto(url, {
             timeout: 30000,
             waitUntil: 'load'
@@ -123,4 +121,11 @@ async function screenshotPage(browser, url) {
             error: error
         }
     })
+}
+
+function urlFormatter(url) {
+    if (!(url.includes('https://')) && url !== '') {
+        url = 'https://' + url;
+    }
+    return url;
 }

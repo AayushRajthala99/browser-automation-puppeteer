@@ -49,10 +49,9 @@ async function filterUrl(urls) {
     urlList.forEach(async url => {
         await Promise.all([await dnslooker(url)])
             .then((result) => {
-                console.log(result[0]);
-                console.log("ValidURL", result[0]);
+                // console.log("ValidURL", result[0]);
                 newUrlList.push(result[0]);
-                console.log(newUrlList);
+                // console.log(newUrlList);
             })
 
     })
